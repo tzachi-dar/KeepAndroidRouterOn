@@ -16,8 +16,8 @@ public class MyReceiver extends BroadcastReceiver {
 
         Log.e("tag", "New onRecieve called");
 
-        PlayFile player = PlayFile.get_player();
-        player.startMusic(context);
+//        PlayFile player = PlayFile.get_player();
+//        player.startMusic(context);
 
         // assumes WordService is a registered service
         //Intent intent = new Intent(context, WordService.class);
