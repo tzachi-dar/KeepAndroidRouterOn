@@ -31,8 +31,14 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
+import android.widget.Toast;
 
-
+import java.lang.reflect.Method;
+//import com.google.common.base.Preconditions;
+import android.content.Context;
+import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiManager;
+import android.util.Log;
 import java.util.Date;
 
 class SntpClient
@@ -254,10 +260,73 @@ class PlayFile {
 }
 
 
+final class WifiApManager {
+      private static final int WIFI_AP_STATE_FAILED = 4;
+      private final WifiManager mWifiManager;
+      private final String TAG = "Wifi Access Manager";
+      private Method wifiControlMethod;
+      private Method wifiApConfigurationMethod;
+      private Method wifiApState;
+
+      public WifiApManager(Context context) throws SecurityException, NoSuchMethodException {
+//???       context = Preconditions.checkNotNull(context);
+       mWifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+       wifiControlMethod = mWifiManager.getClass().getMethod("setWifiApEnabled", WifiConfiguration.class,boolean.class);
+       wifiApConfigurationMethod = mWifiManager.getClass().getMethod("getWifiApConfiguration",null);
+       wifiApState = mWifiManager.getClass().getMethod("getWifiApState");
+      }   
+      public boolean setWifiApState(WifiConfiguration config, boolean enabled) {
+      // config = Preconditions.checkNotNull(config);
+       try {
+        if (enabled) {
+            mWifiManager.setWifiEnabled(!enabled);
+        }
+        return (Boolean) wifiControlMethod.invoke(mWifiManager, config, enabled);
+       } catch (Exception e) {
+        Log.e(TAG, "", e);
+        return false;
+       }
+      }
+      public WifiConfiguration getWifiApConfiguration()
+      {
+          try{
+              return (WifiConfiguration)wifiApConfigurationMethod.invoke(mWifiManager, null);
+          }
+          catch(Exception e)
+          {
+              return null;
+          }
+      }
+      public int getWifiApState() {
+       try {
+            return (Integer)wifiApState.invoke(mWifiManager);
+       } catch (Exception e) {
+        Log.e(TAG, "", e);
+            return WIFI_AP_STATE_FAILED;
+       }
+      }
+}
 
 public class MainActivity extends ActionBarActivity {
 
     Button button;
+
+
+    void EnableRouter() {
+    Toast.makeText(getApplicationContext(), "EnableRouter " ,Toast.LENGTH_LONG).show();
+	WifiApManager wam = null;
+        try {
+		wam= new WifiApManager(getApplicationContext());
+		Toast.makeText(getApplicationContext(), "wam created " ,Toast.LENGTH_LONG).show();
+	} catch (NoSuchMethodException n) {
+		//???
+	}catch (SecurityException s) {
+		//???
+	}
+	WifiConfiguration wc = wam.getWifiApConfiguration();
+Toast.makeText(getApplicationContext(), "calling wam.setWifiApState " ,Toast.LENGTH_LONG).show();
+	wam.setWifiApState(wc,true);
+    }
 
     public void SetAlarm()
     {
@@ -348,7 +417,10 @@ public class MainActivity extends ActionBarActivity {
                 r.play();
 */
 
-                SetAlarm();
+
+		EnableRouter();
+
+//                SetAlarm();
 //                PlayFile player = PlayFile.get_player();
 //                player.startMusic(getApplicationContext());
             }
