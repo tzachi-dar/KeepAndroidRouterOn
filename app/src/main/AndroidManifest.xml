@@ -27,6 +27,8 @@
                 <action android:name="de.vogella.android.mybroadcast" />
             </intent-filter>
         </receiver>
+        <service android:name=".WifiStarterService" />
+        
     </application>
 
 </manifest>
