@@ -18,9 +18,11 @@ public class MainActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+	WifiStarterService wifiStarterService = WifiStarterService.getInstance();
+        wifiStarterService.armTimer(getApplicationContext(),10);
+
         
-        Intent intent = new Intent(this, WifiStarterService.class);
-        startService(intent);
     }   
         
     /**

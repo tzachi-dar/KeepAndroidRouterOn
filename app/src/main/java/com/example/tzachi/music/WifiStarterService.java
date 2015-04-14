@@ -1,6 +1,10 @@
 package com.example.tzachi.music;
 
 import java.lang.reflect.Method;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.os.SystemClock;
+
 
 import android.app.IntentService;
 import android.content.Context;
@@ -57,36 +61,62 @@ final class WifiApManager {
 	}
 }
 
-public class WifiStarterService extends IntentService {
-	  /**
-	   * A constructor is required, and must call the super IntentService(String)
-	   * constructor with a name for the worker thread.
-	   */
-	  public WifiStarterService() {
-	      super("WifiStarterService");
-	  }
+public class WifiStarterService {
 
-    /**
-     * The IntentService calls this method from the default worker thread with
-     * the intent that started the service. When this method returns, IntentService
-     * stops the service, as appropriate.
-    */
-	@Override
-	protected void onHandleIntent(Intent intent) {
+    private static WifiStarterService instance = null;
+    private final static String TAG = "router";
+    final static int callbackPeriod = 300000;
+
+
+
+
+    public static WifiStarterService getInstance() {
+       if(instance == null) {
+          instance = new WifiStarterService();
+       }
+       return instance;
+    }
+
+    public void setContext() {
+
+    }
+
+    public void periodicTimer(Context context) {
+        // This is the timer function that will be called every minute. It is used in order to replay alerts,
+        // execute snoozes and alert if we are not recieving data for a long time.
+        Log.e(TAG, "PeriodicTimer called");
+        StartRouter(context);
+        armTimer(context, callbackPeriod);
+    }
+
+    public void  armTimer(Context context, int time) {
+        Log.e(TAG, "ArmTimer called");
+        Intent intent = new Intent();
+        intent.setAction("com.example.tzachi.music.WifiStarterService");
+
+        AlarmManager alarmMgr = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
+        PendingIntent alarmIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
+
+        alarmMgr.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                SystemClock.elapsedRealtime() +
+                        time , alarmIntent);
+    }
+
+	void StartRouter(Context context) {
 		  
 		WifiConfiguration wc;
 		WifiApManager wam = null;
 		 
 		try {
-			wam= new WifiApManager(getApplicationContext());
-			Toast.makeText(getApplicationContext(), "wam created " ,Toast.LENGTH_LONG).show();
+			wam= new WifiApManager(context);
+			Toast.makeText(context, "wam created " ,Toast.LENGTH_LONG).show();
 		} catch (NoSuchMethodException n) {
 			//???
 		}catch (SecurityException s) {
 			//???
 		}
 		wc = wam.getWifiApConfiguration();
-		Toast.makeText(getApplicationContext(), "calling wam.setWifiApState " ,Toast.LENGTH_LONG).show();
+		Toast.makeText(context, "calling wam.setWifiApState " ,Toast.LENGTH_LONG).show();
 		while (true) {
 			wam.setWifiApState(wc,true);
 			try {
