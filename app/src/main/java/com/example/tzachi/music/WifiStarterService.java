@@ -110,24 +110,16 @@ public class WifiStarterService {
 		try {
 			wam= new WifiApManager(context);
 			Toast.makeText(context, "wam created " ,Toast.LENGTH_LONG).show();
+			Log.e(TAG, "wam created");
 		} catch (NoSuchMethodException n) {
-			//???
+			Log.e(TAG, "ERROR: NoSuchMethodException", e);
 		}catch (SecurityException s) {
-			//???
+			Log.e(TAG, "ERROR: SecurityException", e);
 		}
 		wc = wam.getWifiApConfiguration();
 		Toast.makeText(context, "calling wam.setWifiApState " ,Toast.LENGTH_LONG).show();
-		while (true) {
-			wam.setWifiApState(wc,true);
-			try {
-				Thread.sleep(5 * 60 * 1000);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				// If we were interrupted, let's get out, hopefully, there is a good reason for that (the interuption)
-				break;
-			}
-		}
+		wam.setWifiApState(wc,true);
+        Log.e(TAG, "wam.setWifiApState has returned");
 	}
 }
 
