@@ -1,11 +1,12 @@
 package com.example.tzachi.music;
 
 import java.lang.reflect.Method;
+import java.util.Calendar;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.os.SystemClock;
 
-
+import android.os.Build;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
@@ -13,6 +14,9 @@ import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.util.Log;
 import android.widget.Toast;
+import android.provider.Settings;
+import android.net.Uri;
+
 
 final class WifiApManager {
 	private static final int WIFI_AP_STATE_FAILED = 4;
@@ -84,8 +88,15 @@ public class WifiStarterService {
     public void periodicTimer(Context context) {
         // This is the timer function that will be called every minute. It is used in order to replay alerts,
         // execute snoozes and alert if we are not recieving data for a long time.
-        Log.e(TAG, "PeriodicTimer called");
-        StartRouter(context);
+        Calendar rightNow = Calendar.getInstance();
+        int hours = rightNow.get(Calendar.HOUR_OF_DAY);
+        int dayOfWeek = rightNow.get(Calendar.DAY_OF_WEEK);
+
+    	Log.e(TAG, "PeriodicTimer called hours="+ hours);
+        
+    	if((dayOfWeek != Calendar.SATURDAY) && (hours >= 7 &&  hours <= 14)) {
+    		StartRouter(context);
+    	}
         armTimer(context, callbackPeriod);
     }
 
@@ -102,19 +113,34 @@ public class WifiStarterService {
                         time , alarmIntent);
     }
 
-	void StartRouter(Context context) {
-		  
-		WifiConfiguration wc;
-		WifiApManager wam = null;
-		 
+    StartRouter(Context context) {
+
+        WifiConfiguration wc;
+        WifiApManager wam = null;
+
+                Log.e(TAG, "Before if");
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    if (Settings.System.canWrite(context)) {
+                        // Do stuff here
+                        Log.e(TAG, "having permission");
+                    }
+                    else {
+                        Log.e(TAG, "Asking for permission");
+                        Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_WRITE_SETTINGS);
+                        intent.setData(Uri.parse("package:" + context.getPackageName()));
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        context.startActivity(intent);
+                    }
+                }
+
 		try {
 			wam= new WifiApManager(context);
 			Toast.makeText(context, "wam created " ,Toast.LENGTH_LONG).show();
 			Log.e(TAG, "wam created");
 		} catch (NoSuchMethodException n) {
-			Log.e(TAG, "ERROR: NoSuchMethodException", e);
+			Log.e(TAG, "ERROR: NoSuchMethodException", n);
 		}catch (SecurityException s) {
-			Log.e(TAG, "ERROR: SecurityException", e);
+			Log.e(TAG, "ERROR: SecurityException", s);
 		}
 		wc = wam.getWifiApConfiguration();
 		Toast.makeText(context, "calling wam.setWifiApState " ,Toast.LENGTH_LONG).show();
